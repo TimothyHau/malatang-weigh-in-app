@@ -485,7 +485,7 @@ footer.notes p{margin:0; max-width:70ch}
   <footer class="notes">
     <p>Weights are typical per-piece amounts for self-serve malatang: frozen balls and cakes as sold, raw meat and vegetables as cut, noodles soaked (instant noodles dry). Meat slice weights are calibrated against real bowls weighed at a malatang shop. Everything is drawn to scale against a 24 cm bowl. Every piece you grab varies within a realistic range, just like real food, and the scale reads to 1 g with the bowl tared off.</p>
     <label class="price" for="priceInput">Price per 100 g $<input id="priceInput" type="number" min="0.5" max="20" step="0.01" value="3.49"></label>
-  </footer>
+  <span class="app-ver" style="font-size:12px;opacity:.75">App version 6</span></footer>
 </div>
 
 <div class="tongs" id="tongs" aria-hidden="true">
@@ -1466,7 +1466,15 @@ footer.notes p{margin:0; max-width:70ch}
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+// Offline helper: check for a new version every time the app comes to the front, and reload once when one takes over.
+if ('serviceWorker' in navigator) addEventListener('load', () => {
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController && !reloaded) { reloaded = true; location.reload(); } });
+  navigator.serviceWorker.register('sw.js', {updateViaCache: 'none'}).then(reg => {
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+  }).catch(() => {});
+});
 </script>
 </body>
 </html>
