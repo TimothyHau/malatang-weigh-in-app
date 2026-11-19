@@ -1,5 +1,5 @@
 // Offline support: keeps the game playable without signal.
-const CACHE = 'weigh-in-v7';
+const CACHE = 'weigh-in-v0.3';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
