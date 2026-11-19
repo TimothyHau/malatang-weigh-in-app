@@ -485,7 +485,7 @@ footer.notes p{margin:0; max-width:70ch}
   <footer class="notes">
     <p>Weights are typical per-piece amounts for self-serve malatang: frozen balls and cakes as sold, raw meat and vegetables as cut, noodles soaked (instant noodles dry). Meat slice weights are calibrated against real bowls weighed at a malatang shop. Everything is drawn to scale against a 24 cm bowl. Every piece you grab varies within a realistic range, just like real food, and the scale reads to 1 g with the bowl tared off.</p>
     <label class="price" for="priceInput">Price per 100 g $<input id="priceInput" type="number" min="0.5" max="20" step="0.01" value="3.49"></label>
-  <span class="app-ver" style="font-size:12px;opacity:.75">App version 6</span></footer>
+  <span class="app-ver" style="font-size:12px;opacity:.75">App version 7</span></footer>
 </div>
 
 <div class="tongs" id="tongs" aria-hidden="true">
@@ -837,7 +837,7 @@ footer.notes p{margin:0; max-width:70ch}
       {translate: `${-sx}px ${-sy}px`, scale: '1.08 0.88', rotate: `${-roll * .7}deg`, opacity: 1, offset: .38},
       {translate: `${-sx * .3}px ${-sy * .3}px`, scale: '0.97 1.04', rotate: `${-roll * .2}deg`, offset: .7},
       {translate: '0 0', scale: '1', rotate: '0deg'}
-    ], {duration: 520, easing: 'cubic-bezier(.3,.7,.4,1)'});
+    ], {duration: 380, easing: 'cubic-bezier(.3,.7,.4,1)'});
   }
   function addPiece(p){
     const ing = byId[p.id];
@@ -854,7 +854,7 @@ footer.notes p{margin:0; max-width:70ch}
     const el = pieceEl(p, null);
     basin.appendChild(el);
     landAnim(el, p, [sx, sy, roll]);
-    setTimeout(() => thud(p), reduce ? 0 : 190);
+    setTimeout(() => thud(p), reduce ? 0 : 120);
     bowlChanged(p.id);
   }
   function takeOut(u){
@@ -906,8 +906,10 @@ footer.notes p{margin:0; max-width:70ch}
     T.raf = 0;
     if (!T.follow) return;
     const dx = T.tx - T.x, dy = T.ty - T.y;
-    T.x += dx * .3; T.y += dy * .3;
-    T.rot += (Math.max(-20, Math.min(20, -dx * .45)) - T.rot) * .18;
+    // on a touch drag the tongs stick to the finger; with a mouse they glide just a little behind
+    const snap = !!(T.grab && T.grab.touch), f = snap ? 1 : .5;
+    T.x += dx * f; T.y += dy * f;
+    T.rot += (Math.max(-16, Math.min(16, -dx * (snap ? .9 : .45))) - T.rot) * (snap ? .35 : .2);
     T.el.style.transform = tf(T.x, T.y, T.rot);
     if (Math.abs(dx) > .3 || Math.abs(dy) > .3 || Math.abs(T.rot) > .2) T.raf = requestAnimationFrame(tongsLoop);
   }
@@ -959,7 +961,7 @@ footer.notes p{margin:0; max-width:70ch}
     const dist = Math.hypot(x1 - x0, y1 - y0);
     const midX = (x0 + x1) / 2, midY = Math.min(y0, y1) - Math.min(140, 50 + dist * .18);
     const lean = x1 > x0 ? -18 : 18;
-    const dur = Math.min(520, 240 + dist * .26) * (addMode === 'click' ? .85 : 1);
+    const dur = Math.min(380, 190 + dist * .18) * (addMode === 'click' ? .9 : 1);
     const anim = T.el.animate([
       {transform: tf(x0, y0, 0)},
       {transform: tf(x0, y0 - 22, lean * -.3), offset: .14},
@@ -1015,7 +1017,7 @@ footer.notes p{margin:0; max-width:70ch}
     T.follow = true; tongsShow(true);
     hold(ing);
     pileTake(t);
-    document.body.classList.add('holding');
+    if (!touch) document.body.classList.add('holding'); // hides the mouse cursor; a phone has none, so skip the restyle
   }
   function endGrab(){
     T.grab = null;
@@ -1027,14 +1029,16 @@ footer.notes p{margin:0; max-width:70ch}
   /* Touch screens: a swipe scrolls the fridge as normal. Pressing and holding a tray for a moment
      picks a piece up; from then on scrolling is locked so the finger can drag it to the bowl.
      The tongs ride a little above the finger so the piece stays visible. */
-  const HOLD_MS = 230, TOUCH_LIFT = 44;
+  const HOLD_MS = 180, TOUCH_LIFT = 44;
   let press = null;
   function cancelPress(){ if (!press) return; clearTimeout(press.timer); press.t.classList.remove('pressing'); press = null; }
   window.addEventListener('pointercancel', e => {
     if (press && e.pointerId === press.id) cancelPress();
     if (T.grab && T.grab.touch && !T.grab.sticky){ dropHeld(); endGrab(); }
   });
-  document.addEventListener('touchmove', e => { if (T.grab && T.grab.touch && !T.grab.sticky) e.preventDefault(); }, {passive: false});
+  // Only touches that start in the fridge can be held; listening there (not on the whole page)
+  // keeps scrolling everywhere else free of any wait on the game's code.
+  grid.addEventListener('touchmove', e => { if (T.grab && T.grab.touch && !T.grab.sticky) e.preventDefault(); }, {passive: false});
   grid.addEventListener('contextmenu', e => e.preventDefault());
 
   window.addEventListener('pointermove', e => {
@@ -1161,11 +1165,11 @@ footer.notes p{margin:0; max-width:70ch}
     hideTape();
     if (reduce || v === disp){ showDigits(v); setPrice(v); disp = v; setStable(true); return; }
     setStable(false);
-    const from = disp, t0 = performance.now(), D = 760;
+    const from = disp, t0 = performance.now(), D = 520;
     const f = t => {
       const dt = t - t0;
       if (dt >= D){ showDigits(v); setPrice(v); disp = v; setStable(true); return; }
-      const cur = Math.round(v + (from - v) * Math.exp(-dt / 150) * Math.cos(dt / 290 * Math.PI * 2));
+      const cur = Math.round(v + (from - v) * Math.exp(-dt / 100) * Math.cos(dt / 200 * Math.PI * 2));
       showDigits(cur); setPrice(cur); disp = cur;
       rafId = requestAnimationFrame(f);
     };
@@ -1174,14 +1178,14 @@ footer.notes p{margin:0; max-width:70ch}
   function peelTape(done){
     if (reduce){ done(); return; }
     tapeEls.forEach(el => { el.classList.remove('slap'); restart(el, 'peel'); });
-    setTimeout(done, 460);
+    setTimeout(done, 340);
   }
   function countUp(v, done){
     stopAnims();
     hideTape();
     setStable(false);
     if (reduce){ showDigits(v); setPrice(v); disp = v; setStable(true); done(); return; }
-    const t0 = performance.now(), D = 1400;
+    const t0 = performance.now(), D = 950;
     const f = t => {
       const q = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - q, 3);
       let cur = Math.round(v * e);
@@ -1313,9 +1317,9 @@ footer.notes p{margin:0; max-width:70ch}
     }));
     if (reduce){ after(); return; }
     // lift the bowl and set it down on the scale
-    bowl.animate([{translate: '0 0', scale: '1'}, {translate: '0 -16px', scale: '1.035', offset: .45}, {translate: '0 3px', scale: '1.01 .98', offset: .8}, {translate: '0 0', scale: '1'}], {duration: 560, easing: 'ease-in-out'});
-    setTimeout(() => platform.animate([{translate: '0 0'}, {translate: '0 4px', offset: .3}, {translate: '0 0'}], {duration: 360, easing: 'ease-out'}), 420);
-    setTimeout(after, 480);
+    bowl.animate([{translate: '0 0', scale: '1'}, {translate: '0 -16px', scale: '1.035', offset: .45}, {translate: '0 3px', scale: '1.01 .98', offset: .8}, {translate: '0 0', scale: '1'}], {duration: 400, easing: 'ease-in-out'});
+    setTimeout(() => platform.animate([{translate: '0 0'}, {translate: '0 4px', offset: .3}, {translate: '0 0'}], {duration: 300, easing: 'ease-out'}), 300);
+    setTimeout(after, 340);
   }
   function act(){
     if (S.done){ setMode(S.mode); return; }
