@@ -1,0 +1,25 @@
+{
+  "name": "Malatang Weigh-In",
+  "short_name": "Weigh-In",
+  "description": "Pick malatang ingredients with tongs, fill your bowl and train your eye for real weights.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4ECDF",
+  "theme_color": "#C42A1E",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
