@@ -107,7 +107,7 @@ header.top :focus-visible{outline-color:var(--gold-soft)}
 .lanterns{position:absolute; top:0; right:24px; display:flex; align-items:flex-start; gap:14px; pointer-events:none}
 .lantern{display:block; width:46px; transform-origin:50% 0; animation:sway 4.5s ease-in-out infinite alternate; will-change:transform}
 .lantern:nth-child(2){width:38px; animation-duration:3.8s; animation-delay:-1.6s}
-.lantern svg{display:block; width:100%; height:auto; filter:drop-shadow(0 4px 5px rgba(0,0,0,.35))}
+.lantern svg{display:block; width:100%; height:auto}
 @keyframes sway{from{transform:rotate(-4deg)} to{transform:rotate(4deg)}}
 
 /* Section headings carry a small red knot */
@@ -166,7 +166,7 @@ header.top :focus-visible{outline-color:var(--gold-soft)}
 }
 .glass::before{content:""; position:absolute; left:8%; right:8%; top:0; height:6px; border-radius:0 0 6px 6px; background:#FFFFFF; box-shadow:0 0 24px 8px rgba(255,255,255,.75); opacity:.9}
 .glass.locked .tray{opacity:.55}
-.shelf{display:grid; gap:6px; padding-bottom:10px; position:relative}
+.shelf{display:grid; gap:6px; padding-bottom:10px; position:relative; content-visibility:auto; contain-intrinsic-size:auto 170px}
 .shelf::after{content:""; position:absolute; left:-12px; right:-12px; bottom:0; height:8px; background:linear-gradient(180deg,var(--lip-1),var(--lip-2)); box-shadow:0 4px 6px rgba(0,0,0,.22)}
 .shelf-label{font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--case-ink)}
 .bins{display:grid; grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); gap:8px; padding-bottom:6px}
@@ -183,8 +183,9 @@ header.top :focus-visible{outline-color:var(--gold-soft)}
 /* press-and-hold feedback on phones: the pan squeezes while the hold timer runs */
 .tray.pressing .pan{transform:scale(.92); transition:transform .23s ease; box-shadow:inset 0 3px 6px rgba(0,0,0,.25), 0 0 0 2px var(--chili)}
 .pile{position:absolute; inset:0}
-.pile span{position:absolute; left:50%; top:54%; filter:drop-shadow(0 1.5px 1px rgba(0,0,0,.3))}
-.pile svg{width:100%; height:100%; display:block}
+.pile span{position:absolute; left:50%; top:54%}
+/* ingredient pictures: shadow is baked in, so no CSS filters anywhere on them */
+img.ing{width:100%; height:100%; display:block; pointer-events:none; -webkit-user-drag:none; user-select:none; -webkit-user-select:none}
 .tray.jiggle .pan{animation:jiggle .34s ease}
 @keyframes jiggle{25%{transform:translateY(-6px) rotate(-1.5deg)} 60%{transform:translateY(1px) rotate(1deg)}}
 /* red price tags with gold trim, like the labels in a malatang fridge */
@@ -213,8 +214,7 @@ header.top :focus-visible{outline-color:var(--gold-soft)}
 .tongs.ready:not(.closed) .arm.l{transform:rotate(13deg)}
 .tongs.ready:not(.closed) .arm.r{transform:rotate(-13deg)}
 .tongs.closed .arm{transform:rotate(0deg)}
-.held{position:absolute; left:30px; top:128px; transform:translate(-50%,-50%); filter:drop-shadow(0 3px 3px rgba(0,0,0,.35))}
-.held svg{width:100%; height:100%; display:block}
+.held{position:absolute; left:30px; top:128px; transform:translate(-50%,-50%)}
 body.tongs-cursor .case, body.tongs-cursor .case *, body.tongs-cursor .bowl, body.tongs-cursor .bowl *{cursor:none !important}
 body.holding, body.holding *{cursor:none !important; user-select:none}
 
@@ -232,7 +232,9 @@ body.holding, body.holding *{cursor:none !important; user-select:none}
   background:conic-gradient(from 200deg,var(--steel-hi),var(--steel-lo) 18%,var(--steel-hi) 38%,var(--steel-mid) 55%,var(--steel-hi) 72%,var(--steel-lo) 88%,var(--steel-hi));
   box-shadow:0 0 0 1.5px var(--steel-lo), inset 0 0 0 1px rgba(255,255,255,.7), 0 8px 18px var(--shadow); transition:box-shadow .15s ease;
 }
-.bowl.over{box-shadow:0 0 0 4px var(--chili), 0 8px 18px var(--shadow)}
+/* "drop here" ring: a separate layer that fades in, so the bowl and its pieces never have to redraw */
+.bowl::after{content:""; position:absolute; inset:-5px; border-radius:50%; border:4px solid var(--chili); opacity:0; transition:opacity .12s ease; pointer-events:none; will-change:opacity}
+.bowl.over::after{opacity:1}
 .basin{
   position:absolute; inset:5.5%; border-radius:50%; --k:1;
   /* concave: the wall under the rim (top) sits in shade, the far wall (bottom right) catches the light, the flat bottom is in the middle */
@@ -245,11 +247,10 @@ body.holding, body.holding *{cursor:none !important; user-select:none}
 .basin-hint{position:absolute; inset:0; display:grid; place-items:center; text-align:center; padding:22%; color:#4A545B; font-size:13px; font-weight:600; pointer-events:none}
 .piece{
   position:absolute; aspect-ratio:1; padding:0; border:0; background:none; cursor:pointer;
-  transform:translate(-50%,-50%) rotate(var(--r)); filter:drop-shadow(0 2px 2px rgba(0,0,0,.38));
+  transform:translate(-50%,-50%) rotate(var(--r));
   transition:scale .15s ease, filter .15s ease;
 }
-.piece:not(:disabled):hover{scale:1.05; filter:drop-shadow(0 6px 5px rgba(0,0,0,.42))}
-.piece svg{width:100%; height:100%; display:block; pointer-events:none}
+@media (hover:hover){ .piece:not(:disabled):hover{scale:1.06} }
 .piece:disabled{cursor:default}
 .piece.rain{animation:rain .6s cubic-bezier(.55,0,.75,1.25) backwards}
 @keyframes rain{from{transform:translate(-50%,-50%) translateY(calc(var(--k) * -280px)) rotate(calc(var(--r) - 120deg)) scale(1.25); opacity:0} 25%{opacity:1} 82%{transform:translate(-50%,-50%) scale(1.04,.94) rotate(var(--r))}}
@@ -356,6 +357,7 @@ footer.notes p{margin:0; max-width:70ch}
   .platform{padding:7px; border-radius:14px; grid-row:span 2; align-self:start; display:block}
   .platform .bowl{width:100%}
   .mist{display:none}
+  .shine{display:none} /* a moving layer the full height of the long phone fridge costs more than it adds */
   .platform .lcd{display:none}
   .rig-right{display:grid; gap:8px; min-width:0}
   .rig-right .lcd{display:grid}
@@ -485,7 +487,7 @@ footer.notes p{margin:0; max-width:70ch}
   <footer class="notes">
     <p>Weights are typical per-piece amounts for self-serve malatang: frozen balls and cakes as sold, raw meat and vegetables as cut, noodles soaked (instant noodles dry). Meat slice weights are calibrated against real bowls weighed at a malatang shop. Everything is drawn to scale against a 24 cm bowl. Every piece you grab varies within a realistic range, just like real food, and the scale reads to 1 g with the bowl tared off.</p>
     <label class="price" for="priceInput">Price per 100 g $<input id="priceInput" type="number" min="0.5" max="20" step="0.01" value="4.50"></label>
-  <span class="app-ver" style="font-size:12px;opacity:.75">App version 0.3</span></footer>
+  <span class="app-ver" style="font-size:12px;opacity:.75">App version 0.4</span></footer>
 </div>
 
 <div class="tongs" id="tongs" aria-hidden="true">
@@ -734,7 +736,14 @@ footer.notes p{margin:0; max-width:70ch}
     }
     return '';
   }
-  const svgOf = ing => svgCache[ing.id] || (svgCache[ing.id] = `<svg viewBox="-50 -50 100 100" aria-hidden="true">${draw(ing)}</svg>`);
+  /* Each ingredient becomes one self-contained picture (an <img> of its SVG, shadow baked in).
+     The browser draws it once and reuses the bitmap everywhere it appears, which is far cheaper on a
+     phone than hundreds of live vector drawings with live CSS shadows. */
+  const IMG_DEFS = '<defs><radialGradient id="gShade" cx="36%" cy="30%" r="78%"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".42" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></radialGradient>' +
+    '<filter id="ds" x="-15%" y="-15%" width="130%" height="135%"><feDropShadow dx="0" dy="2.6" stdDeviation="1.8" flood-color="#000" flood-opacity=".36"/></filter></defs>';
+  const svgOf = ing => svgCache[ing.id] || (svgCache[ing.id] =
+    `<img class="ing" alt="" draggable="false" decoding="async" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -50 100 100" width="160" height="160">${IMG_DEFS}<g filter="url(#ds)">${draw(ing)}</g></svg>`)}">`);
 
   /* ---------- Fridge ---------- */
   const PILE = [[-16,6,-24],[15,8,30],[-2,-6,8],[-8,12,62],[10,-4,-48]];
